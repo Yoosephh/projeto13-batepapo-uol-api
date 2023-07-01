@@ -5,6 +5,12 @@ import {MongoClient} from "mongodb"
 import joi from "joi"
 import dayjs from "dayjs"
 
+const app = express();
+const PORT = 5000;
+app.use(cors());
+app.use(express.json());
+dotenv.config();
+app.listen(PORT)
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
 
 const dayjs = require('dayjs');
@@ -93,7 +99,4 @@ app.post("/status", (req, res) => {
   }
 })
 
-const app = express();
-app.use(cors());
-app.use(express.json());
-dotenv.config();
+
