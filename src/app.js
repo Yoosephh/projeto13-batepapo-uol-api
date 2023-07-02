@@ -11,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 dotenv.config();
 app.listen(PORT)
+
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
 
 const dayjs = require('dayjs');

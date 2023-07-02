@@ -1,4 +1,8 @@
 {
+  "type": "module",
+  "scripts": {
+    "start": "node ./src/app.js"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "dayjs": "^1.11.9",
