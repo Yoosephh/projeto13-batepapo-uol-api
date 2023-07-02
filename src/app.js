@@ -14,18 +14,19 @@ app.listen(PORT);
 
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
 
-const dayjs = require("dayjs");
-
 const currentTime = dayjs().format("HH:mm:ss");
 
 let db;
-
 try {
-  await mongoClient.connect();
-  db = mongoClient.db();
-} catch (err) {
+  mongoClient.connect(() => {
+    db = mongoClient.db();
+  });
+}catch (err) {
   res.send(err.message);
 }
+
+
+
 app.post("/participants", async (req, res) => {
   try {
     const { name } = req.body;
@@ -66,16 +67,16 @@ app.post("/participants", async (req, res) => {
   }
 });
 
-app.get("/participants", (req, res) => {
+app.get("/participants", async(req, res) => {
   try {
-    res.send(db.collection("participants").find());
+    res.send(await db.collection("participants").find().toArray());
   } catch (error) {
     console.error(error);
     res.sendStatus(500);
   }
 });
 
-app.post("/messages", (req, res) => {
+app.post("/messages", async(req, res) => {
   try {
   } catch (error) {
     console.error(error);
@@ -83,10 +84,10 @@ app.post("/messages", (req, res) => {
   }
 });
 
-app.get("/messages", (req, res) => {
+app.get("/messages", async(req, res) => {
   try {
 
-    res.send(db.collection("messages").find());
+    res.send(await db.collection("messages").find().toArray());
 
   } catch (error) {
     console.error(error);
@@ -94,7 +95,7 @@ app.get("/messages", (req, res) => {
   }
 });
 
-app.post("/status", (req, res) => {
+app.post("/status", async(req, res) => {
   try {
   } catch (error) {
     console.error(error);
