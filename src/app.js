@@ -157,21 +157,12 @@ app.get("/messages", async(req, res) => {
     const {limit} = req.params;
     const messagesToSend = await db.collection("messages").find({$or:[{from: user}, {to: user}, {to: "Todos"}]}).toArray();
 
-    const userSchema = joi.object({
-      limit: joi.number()
-    });
-
-    const validation = userSchema.validate({name}, { abortEarly: false });
-
-    if (validation.error) {
-      const errors = validation.error.details.map((detail) => detail.message);
-      return res.status(422).send(errors);
+    if(isNaN(limit) || limit <= 0) {
+      return res.sendStatus(422)
     }
 
     if(limit) {
-
       return res.send(messagesToSend.slice(-limit))
-
     } else {
       return res.send(messagesToSend)
     }
