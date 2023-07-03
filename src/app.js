@@ -13,8 +13,6 @@ dotenv.config();
 
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
 
-const currentTime = dayjs().format("HH:mm:ss");
-
 let db;
 
 try {
@@ -26,7 +24,7 @@ try {
   });
 
   db = mongoClient.db();
-  console.log(`${currentTime}: Conectado ao MongoDB`);
+  console.log(`${dayjs().format("HH:mm:ss")}: Conectado ao MongoDB`);
 
   startInterval();
 
@@ -92,7 +90,7 @@ app.post("/participants", async (req, res) => {
           to: "Todos",
           text: "Entra na sala...",
           type: "status",
-          time: currentTime,
+          time: dayjs().format("HH:mm:ss")
         });
 
       res.sendStatus(201);
@@ -140,7 +138,7 @@ app.post("/messages", async (req, res) => {
       to,
       text,
       type,
-      time: currentTime,
+      time: dayjs().format("HH:mm:ss"),
     };
 
     await db.collection("messages").insertOne(message);
