@@ -39,13 +39,12 @@ try {
 
 function startInterval() {
   setInterval(async () => {
-    const tempoAway = new Date(Date.now() - 10000);
+    const tempoAway = new Date.now() - 10000;
     const participantesRemovidos = await db.collection("participants").find({
       lastStatus: { $lt: tempoAway },
     }).toArray();
 
     if (participantesRemovidos.length > 0) {
-      const currentTime = dayjs().format("HH:mm:ss");
       await db.collection("participants").deleteMany({
         lastStatus: { $lt: tempoAway },
       });
@@ -55,7 +54,7 @@ function startInterval() {
         to: "Todos",
         text: "Saiu da sala...",
         type: "status",
-        time: currentTime,
+        time: dayjs().format("HH:mm:ss"),
       }));
 
       await db.collection("messages").insertMany(messages);
@@ -156,8 +155,28 @@ app.post("/messages", async (req, res) => {
 
 app.get("/messages", async(req, res) => {
   try {
+    const {user} = req.headers;
+    const {limit} = req.params;
+    const messagesToSend = await db.collection("messages").find({$or:[{from: user}, {to: user}, {to: "Todos"}]}).toArray();
 
-    res.send(await db.collection("messages").find().toArray());
+    const userSchema = joi.object({
+      limit: joi.number()
+    });
+
+    const validation = userSchema.validate({name}, { abortEarly: false });
+
+    if (validation.error) {
+      const errors = validation.error.details.map((detail) => detail.message);
+      return res.status(422).send(errors);
+    }
+
+    if(limit) {
+
+      return res.send(messagesToSend.slice(-limit))
+
+    } else {
+      return res.send(messagesToSend)
+    }
 
   } catch (error) {
     console.error(error);
