@@ -37,7 +37,6 @@ try {
   console.log(err.message);
 }
 
-
 function startInterval() {
   setInterval(async () => {
     const tempoAway = new Date(Date.now() - 10000);
@@ -168,13 +167,21 @@ app.get("/messages", async(req, res) => {
 
 app.post("/status", async(req, res) => {
   try {
-    const {name} = req.headers.user
+    const {user} = req.headers
 
-    if(!name) {
+    if(!user) {
       return res.sendStatus(404)
     }
-    await db.collection("participants").findOneAndUpdate( {name}, { lastStatus: Date.now()} )
+
+    const participante = await db.collection("participants").findOne({name: user});
+    if(participante) {
+      await db.collection("participants").updateOne({name: user}, { $set:{lastStatus}})
+    } else {
+      return res.sendStatus(404)
+    }
+
     res.sendStatus(200)
+
   } catch (error) {
     console.error(error);
     res.sendStatus(500);
