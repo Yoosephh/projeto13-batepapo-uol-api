@@ -10,44 +10,50 @@ const PORT = 5000;
 app.use(cors());
 app.use(express.json());
 dotenv.config();
-app.listen(PORT);
 
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
 
 const currentTime = dayjs().format("HH:mm:ss");
 
 let db;
+
 try {
-  mongoClient.connect(() => {
-    db = mongoClient.db();
+  mongoClient.connect((err) => {return console.log(err)});
+  db = mongoClient.db();
+
+  console.log(`${currentTime}: Conectado com o banco de dados`);
+
+  app.listen(PORT, ()=> {
+    console.log(`Servidor rodando na porta ${PORT}, juntamente ao Mongo!`)
   });
+  
 }catch (err) {
   console.log(err.message);
 }
 
-setInterval(async () => {
-  const tempoAway = new Date(Date.now() - 10000);
-  const participantesRemovidos = await db.collection("participants").find({
-    lastStatus: { $lt: tempoAway },
-  }).toArray();
+// setInterval(async () => {
+//   const tempoAway = new Date(Date.now() - 10000);
+//   const participantesRemovidos = await db.collection("participants").find({
+//     lastStatus: { $lt: tempoAway },
+//   }).toArray();
 
-  if (participantesRemovidos.length > 0) {
-    const currentTime = dayjs().format("HH:mm:ss");
-    await db.collection("participants").deleteMany({
-      lastStatus: { $lt: tempoAway },
-    });
+//   if (participantesRemovidos.length > 0) {
+//     const currentTime = dayjs().format("HH:mm:ss");
+//     await db.collection("participants").deleteMany({
+//       lastStatus: { $lt: tempoAway },
+//     });
 
-    const messages = participantesRemovidos.map((participant) => ({
-      from: participant.name,
-      to: "Todos",
-      text: "Saiu da sala...",
-      type: "status",
-      time: currentTime,
-    }));
+//     const messages = participantesRemovidos.map((participant) => ({
+//       from: participant.name,
+//       to: "Todos",
+//       text: "Saiu da sala...",
+//       type: "status",
+//       time: currentTime,
+//     }));
 
-    await db.collection("messages").insertMany(messages);
-  }
-}, 15000);
+//     await db.collection("messages").insertMany(messages);
+//   }
+// }, 15000);
 
 app.post("/participants", async (req, res) => {
   try {
@@ -64,7 +70,8 @@ app.post("/participants", async (req, res) => {
       return res.status(422).send(errors);
     }
 
-    const user = await db.collection("participants").findOne({ name: name });
+    const user = await db.collection("participants").findOne({ name });
+
     if (user) {
       return res.sendStatus(409);
     } else {
