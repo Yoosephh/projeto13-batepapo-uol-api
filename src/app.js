@@ -18,42 +18,51 @@ const currentTime = dayjs().format("HH:mm:ss");
 let db;
 
 try {
-  mongoClient.connect((err) => {return console.log(err)});
-  db = mongoClient.db();
-
-  console.log(`${currentTime}: Conectado com o banco de dados`);
-
-  app.listen(PORT, ()=> {
-    console.log(`Servidor rodando na porta ${PORT}, juntamente ao Mongo!`)
+  mongoClient.connect((err) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
   });
-  
-}catch (err) {
+
+  db = mongoClient.db();
+  console.log(`${currentTime}: Conectado ao MongoDB`);
+
+  startInterval();
+
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}, juntamente ao Mongo!`);
+  });
+} catch (err) {
   console.log(err.message);
 }
 
-// setInterval(async () => {
-//   const tempoAway = new Date(Date.now() - 10000);
-//   const participantesRemovidos = await db.collection("participants").find({
-//     lastStatus: { $lt: tempoAway },
-//   }).toArray();
 
-//   if (participantesRemovidos.length > 0) {
-//     const currentTime = dayjs().format("HH:mm:ss");
-//     await db.collection("participants").deleteMany({
-//       lastStatus: { $lt: tempoAway },
-//     });
+function startInterval() {
+  setInterval(async () => {
+    const tempoAway = new Date(Date.now() - 10000);
+    const participantesRemovidos = await db.collection("participants").find({
+      lastStatus: { $lt: tempoAway },
+    }).toArray();
 
-//     const messages = participantesRemovidos.map((participant) => ({
-//       from: participant.name,
-//       to: "Todos",
-//       text: "Saiu da sala...",
-//       type: "status",
-//       time: currentTime,
-//     }));
+    if (participantesRemovidos.length > 0) {
+      const currentTime = dayjs().format("HH:mm:ss");
+      await db.collection("participants").deleteMany({
+        lastStatus: { $lt: tempoAway },
+      });
 
-//     await db.collection("messages").insertMany(messages);
-//   }
-// }, 15000);
+      const messages = participantesRemovidos.map((participant) => ({
+        from: participant.name,
+        to: "Todos",
+        text: "Saiu da sala...",
+        type: "status",
+        time: currentTime,
+      }));
+
+      await db.collection("messages").insertMany(messages);
+    }
+  }, 15000);
+}
 
 app.post("/participants", async (req, res) => {
   try {
