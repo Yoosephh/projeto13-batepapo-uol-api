@@ -157,11 +157,10 @@ app.get("/messages", async(req, res) => {
     const {limit} = req.params;
     const messagesToSend = await db.collection("messages").find({$or:[{from: user}, {to: user}, {to: "Todos"}]}).toArray();
 
-    if(isNaN(limit) || limit <= 0) {
-      return res.sendStatus(422)
-    }
-
     if(limit) {
+      if(isNaN(limit) || limit <= 0) {
+        return res.sendStatus(422)
+      }
       return res.send(messagesToSend.slice(-limit))
     } else {
       return res.send(messagesToSend)
