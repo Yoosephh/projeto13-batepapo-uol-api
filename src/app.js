@@ -57,7 +57,7 @@ app.post("/participants", async (req, res) => {
       name: joi.string().required(),
     });
 
-    const validation = userSchema.validate(userSchema, { abortEarly: false });
+    const validation = userSchema.validate({name}, { abortEarly: false });
 
     if (validation.error) {
       const errors = validation.error.details.map((detail) => detail.message);
@@ -109,7 +109,7 @@ app.post("/messages", async (req, res) => {
       type: joi.string().valid("message", "private_message").required(),
     });
 
-    const validation = messageSchema.validate(messageSchema, { abortEarly: false });
+    const validation = messageSchema.validate({ to, text, type }, { abortEarly: false });
 
     if (validation.error) {
       const errors = validation.error.details.map((detail) => detail.message);
