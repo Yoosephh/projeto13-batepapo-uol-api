@@ -154,7 +154,7 @@ app.post("/messages", async (req, res) => {
 app.get("/messages", async(req, res) => {
   try {
     const {user} = req.headers;
-    const {limit} = req.params;
+    const limit = parseInt(req.query.limit);
     const messagesToSend = await db.collection("messages").find({$or:[{from: user}, {to: user}, {to: "Todos"}]}).toArray();
 
     if(limit) {
