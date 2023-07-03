@@ -22,10 +22,32 @@ try {
     db = mongoClient.db();
   });
 }catch (err) {
-  res.send(err.message);
+  console.log(err.message);
 }
 
+setInterval(async () => {
+  const tempoAway = new Date(Date.now() - 10000);
+  const participantesRemovidos = await db.collection("participants").find({
+    lastStatus: { $lt: tempoAway },
+  }).toArray();
 
+  if (participantesRemovidos.length > 0) {
+    const currentTime = dayjs().format("HH:mm:ss");
+    await db.collection("participants").deleteMany({
+      lastStatus: { $lt: tempoAway },
+    });
+
+    const messages = participantesRemovidos.map((participant) => ({
+      from: participant.name,
+      to: "Todos",
+      text: "Saiu da sala...",
+      type: "status",
+      time: currentTime,
+    }));
+
+    await db.collection("messages").insertMany(messages);
+  }
+}, 15000);
 
 app.post("/participants", async (req, res) => {
   try {
@@ -35,7 +57,7 @@ app.post("/participants", async (req, res) => {
       name: joi.string().required(),
     });
 
-    const validation = userSchema.validate(name, { abortEarly: false });
+    const validation = userSchema.validate(userSchema, { abortEarly: false });
 
     if (validation.error) {
       const errors = validation.error.details.map((detail) => detail.message);
@@ -87,7 +109,7 @@ app.post("/messages", async (req, res) => {
       type: joi.string().valid("message", "private_message").required(),
     });
 
-    const validation = messageSchema.validate({ to, text, type }, { abortEarly: false });
+    const validation = messageSchema.validate(messageSchema, { abortEarly: false });
 
     if (validation.error) {
       const errors = validation.error.details.map((detail) => detail.message);
