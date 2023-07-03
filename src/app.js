@@ -37,10 +37,13 @@ try {
 
 function startInterval() {
   setInterval(async () => {
-    const tempoAway = new Date.now() - 10000;
-    const participantesRemovidos = await db.collection("participants").find({
-      lastStatus: { $lt: tempoAway },
-    }).toArray();
+    const tempoAway = new Date(Date.now() - 10000);
+    const participantesRemovidos = await db
+      .collection("participants")
+      .find({
+        lastStatus: { $lt: tempoAway },
+      })
+      .toArray();
 
     if (participantesRemovidos.length > 0) {
       await db.collection("participants").deleteMany({
@@ -172,23 +175,24 @@ app.get("/messages", async(req, res) => {
   }
 });
 
-app.post("/status", async(req, res) => {
+app.post("/status", async (req, res) => {
   try {
-    const {user} = req.headers
+    const { user } = req.headers;
 
-    if(!user) {
-      return res.sendStatus(404)
+    if (!user) {
+      return res.sendStatus(404);
     }
 
-    const participante = await db.collection("participants").findOne({name: user});
-    if(participante) {
-      await db.collection("participants").updateOne({name: user}, { $set:{lastStatus}})
+    const participante = await db.collection("participants").findOne({ name: user });
+    if (participante) {
+      await db.collection("participants").updateOne(
+        { name: user },
+        { $set: { lastStatus: Date.now() } }
+      );
+      res.sendStatus(200);
     } else {
-      return res.sendStatus(404)
+      return res.sendStatus(404);
     }
-
-    res.sendStatus(200)
-
   } catch (error) {
     console.error(error);
     res.sendStatus(500);
